@@ -1,51 +1,61 @@
+import { useState, useEffect } from "react";
+import { Routes, Route } from "react-router-dom";
 import "./App.css";
-import { useState } from "react";
+import * as BookAPI from "./BooksAPI";
+import ListBooks from "./ListBooks";
 import SearchBar from "./SearchBar";
-import book from "./book";
+
+const options = [
+  { name: "Currently Reading", id: "currentlyReading" },
+  { name: "Want to Read", id: "wantToRead" },
+  { name: "Read", id: "read" },
+];
+
 function App() {
-  const [showSearchPage, setShowSearchpage] = useState(false);
+  const [books, setBooks] = useState([]);
+
+  useEffect(() => {
+    const getAllBooks = async () => {
+      const result = await BookAPI.getAll();
+      setBooks(result);
+    };
+    getAllBooks();
+  }, []);
+  console.log("cheeck", options);
+  const changeShelf = (book, shelf) => {
+    BookAPI.update(book, shelf).then(() => {
+      BookAPI.getAll().then((books) => setBooks(books));
+    });
+    setBooks(books.filter((b) => b.id !== book.id));
+  };
 
   return (
     <div className="app">
-      {showSearchPage ? (
-        <div className="search-books">
-          <div className="search-books-bar">
-            <a
-              className="close-search"
-              onClick={() => setShowSearchpage(!showSearchPage)}
-            >
-              Close
-            </a>
-            <div className="search-books-input-wrapper">
-              <input
-                type="text"
-                placeholder="Search by title, author, or ISBN"
-              />
-            </div>
-          </div>
-          <div className="search-books-results">
-            <ol className="books-grid"></ol>
-          </div>
-        </div>
-      ) : (
-        <div className="list-books">
-          <div className="list-books-title">
-            <h1>MyReads</h1>
-            
-          </div>
-          <div className="list-books-content">
-            <div>
-           <book/>
-
-          </div>
-          <div className="open-search">
-            <a onClick={() => setShowSearchpage(!showSearchPage)}>Add a book</a>
-          </div>
-        </div>
-      )
+      <Routes>
+        <Route
+          exact
+          path="/"
+          element={
+            <ListBooks
+              books={books}
+              changeShelf={changeShelf}
+              options={options}
+            />
+          }
+        />
+        <Route
+          exact
+          path="/search"
+          element={
+            <SearchBar
+              books={books}
+              changeShelf={changeShelf}
+              options={options}
+            />
+          }
+        />
+      </Routes>
     </div>
   );
 }
-
 export default App;
-
