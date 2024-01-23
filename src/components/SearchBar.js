@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
-import * as BookAPI from "./BooksAPI";
+import * as BookAPI from "../BooksAPI";
 import Book from "./Book";
 
 const SearchBar = ({ changeShelf }) => {
@@ -15,38 +15,38 @@ const SearchBar = ({ changeShelf }) => {
     }
   };
 
-  useEffect(() => {
-    const hnadleSearch = async (query) => {
-      if (query === "") {
+  const hnadleSearch = useCallback(async (query) => {
+    if (query === "") {
+      return;
+    }
+
+    const booksShlefed = await BookAPI.getAll();
+
+    await BookAPI.search(query).then((fetchedBooks) => {
+      if (fetchedBooks.length === 0 || fetchedBooks.error === "empty query") {
+        setSearchedBooks([]);
         return;
       }
 
-      const booksShlefed = await BookAPI.getAll();
-
-      await BookAPI.search(query).then((fetchedBooks) => {
-        if (fetchedBooks.length === 0 || fetchedBooks.error === "empty query") {
-          setSearchedBooks([]);
+      fetchedBooks.forEach((fetchedBook) => {
+        const bookFound = booksShlefed.find(
+          (bookShlefed) => bookShlefed.id === fetchedBook.id
+        );
+        if (bookFound) {
+          fetchedBook.shelf = bookFound.shelf;
           return;
         }
-
-        fetchedBooks.forEach((fetchedBook) => {
-          const bookFound = booksShlefed.find(
-            (bookShlefed) => bookShlefed.id === fetchedBook.id
-          );
-          if (bookFound) {
-            fetchedBook.shelf = bookFound.shelf;
-            return;
-          }
-          fetchedBook.shelf = "none";
-        });
-
-        setSearchedBooks(fetchedBooks);
+        fetchedBook.shelf = "none";
       });
-    };
 
+      setSearchedBooks(fetchedBooks);
+    });
+  });
+
+  useEffect(() => {
     const Timer = setTimeout(() => {
       hnadleSearch(searchQuery);
-    }, 500);
+    }, 200);
 
     return () => clearTimeout(Timer);
   }, [searchQuery]);

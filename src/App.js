@@ -2,8 +2,8 @@ import { useState, useEffect } from "react";
 import { Routes, Route } from "react-router-dom";
 import "./App.css";
 import * as BookAPI from "./BooksAPI";
-import ListBooks from "./ListBooks";
-import SearchBar from "./SearchBar";
+import ListBooks from "./components/ListBooks";
+import SearchBar from "./components/SearchBar";
 const options = [
   { name: "Currently Reading", id: "currentlyReading" },
   { name: "Want to Read", id: "wantToRead" },
@@ -26,7 +26,7 @@ function App() {
     BookAPI.update(book, shelf).then(() => {
       BookAPI.getAll().then((books) => setBooks(books));
     });
-    setBooks(books.filter((b) => b.id !== book.id));
+    setBooks([...books.filter((b) => b.id !== book.id), book]);
   };
   return (
     <div className="app">
