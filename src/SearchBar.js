@@ -1,24 +1,55 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import * as BookAPI from "./BooksAPI";
 import Book from "./Book";
 
-const SearchBar = ({ books, changeShelf }) => {
-  const [searchBooks, setsearchBooks] = useState([]);
+const SearchBar = ({ changeShelf }) => {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchedBooks, setSearchedBooks] = useState([]);
 
-  const search = (query) => {
-    if (query.trim() === "") {
-      setsearchBooks([]);
-    } else {
-      BookAPI.search(query, 20).then((books) => {
-        if (books.error) {
-          setsearchBooks([]);
-        } else {
-          setsearchBooks(books);
-        }
-      });
+  const searchQueryHanlder = (e) => {
+    setSearchQuery(e.target.value);
+    if (e.target.value === "") {
+      setSearchedBooks([]);
+      return;
     }
   };
+
+  useEffect(() => {
+    const hnadleSearch = async (query) => {
+      if (query === "") {
+        return;
+      }
+
+      const booksShlefed = await BookAPI.getAll();
+
+      await BookAPI.search(query).then((fetchedBooks) => {
+        if (fetchedBooks.length === 0 || fetchedBooks.error === "empty query") {
+          setSearchedBooks([]);
+          return;
+        }
+
+        fetchedBooks.forEach((fetchedBook) => {
+          const bookFound = booksShlefed.find(
+            (bookShlefed) => bookShlefed.id === fetchedBook.id
+          );
+          if (bookFound) {
+            fetchedBook.shelf = bookFound.shelf;
+            return;
+          }
+          fetchedBook.shelf = "none";
+        });
+
+        setSearchedBooks(fetchedBooks);
+      });
+    };
+
+    const Timer = setTimeout(() => {
+      hnadleSearch(searchQuery);
+    }, 500);
+
+    return () => clearTimeout(Timer);
+  }, [searchQuery]);
 
   return (
     <div className="search-books">
@@ -26,15 +57,15 @@ const SearchBar = ({ books, changeShelf }) => {
         <Link className="close-search" to="/">
           Close
         </Link>
-        <div className="search-books-input-wrapper">
+        <div>
           <input
             type="text"
-            onChange={(e) => search(e.target.value)}
+            onChange={searchQueryHanlder}
             placeholder="Search by title, author, or ISBN"
           />
           <div>
             <ol className="books-grid">
-              {searchBooks.map((book) => (
+              {searchedBooks.map((book) => (
                 <Book key={book.id} book={book} changeShelf={changeShelf} />
               ))}
             </ol>

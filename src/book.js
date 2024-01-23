@@ -3,6 +3,7 @@ const Book = ({ book, changeShelf }) => {
     { name: "Currently Reading", id: "currentlyReading" },
     { name: "Want to Read", id: "wantToRead" },
     { name: "Read", id: "read" },
+    { name: "None", id: "none" },
   ];
   return (
     <div className="book">
@@ -31,7 +32,6 @@ const Book = ({ book, changeShelf }) => {
                 {option.name}
               </option>
             ))}
-            <option value="none">None</option>
           </select>
         </div>
       </div>

@@ -4,13 +4,11 @@ import "./App.css";
 import * as BookAPI from "./BooksAPI";
 import ListBooks from "./ListBooks";
 import SearchBar from "./SearchBar";
-
 const options = [
   { name: "Currently Reading", id: "currentlyReading" },
   { name: "Want to Read", id: "wantToRead" },
   { name: "Read", id: "read" },
 ];
-
 function App() {
   const [books, setBooks] = useState([]);
 
@@ -21,14 +19,15 @@ function App() {
     };
     getAllBooks();
   }, []);
-  console.log("cheeck", options);
+
+  // console.log("cheeck", options);
   const changeShelf = (book, shelf) => {
+    book.shelf = shelf;
     BookAPI.update(book, shelf).then(() => {
       BookAPI.getAll().then((books) => setBooks(books));
     });
     setBooks(books.filter((b) => b.id !== book.id));
   };
-
   return (
     <div className="app">
       <Routes>
